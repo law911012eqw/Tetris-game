@@ -6,9 +6,16 @@
         <link href="style.css" rel="stylesheet">
     </head>
     <body>
-        <canvas id="tetris" width="360px" height="720px">
-        </canvas>
+        <div id="tetris">
+            <canvas id="GameCanvas" width="360px" height="720px"> </canvas>
+            <div id="DisplayController">
+                <p id="level">Level: 1</p>
+                <p id="highScore">High Score: 0</p>
+                <p id="score">Score: 0</p>
+            </div>
+        </div>
+
     </body>
-    <script src="tetris.js"></script>
     <script src="tetrominoes.js"></script>
+    <script src="tetris.js"></script>
 </html>

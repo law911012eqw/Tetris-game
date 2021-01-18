@@ -1,0 +1,15 @@
+canvas{
+    display: block;
+    border: 4px solid rgb(124,124,124);
+}
+div{
+    font-size: 31px;
+    font-weight: 700;
+    font-family: 'Ubuntu';
+    text-align: center;
+    margin-left: 40px;
+}
+#tetris{
+    display: flex;
+    justify-content: center;
+}
