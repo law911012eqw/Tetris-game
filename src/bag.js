@@ -1,23 +1,29 @@
-//
-
-
-const bag = () => {
-    let bag = [];
-    function tetrominoBag() {
-        while (arr.length <= 8) {
-            let r = Math.floor(Math.random() * 6) + 1;
-            if (arr.indexOf(r) === -1) arr.push(r);
-        }
-    }
-    function emptyBag(){
-        if (bag.length === 0 ){
-            tetrominoBag();
-        }
-        return bag[0];
-    }
-}
 //Generate unique tetrominoes in an array
+const generate = (() => {
+    //let arr = [0,1,2,3,4,5,6];
+    let bag = [0,1,2,3,4,5,6];
+    const totalPieces = 7;
+    const getBag = () => bag;
+    const getPiece = (i) => bag[i];
+    const tetrotetro = () => {
+        if (bag.length === 0) { generate.newBag(); }
+        for (let j = totalPieces - 1; j >= 0; j--) {
+            let swapIndex = Math.floor(Math.random() * j);
+            let tmp = bag[swapIndex];
+            bag[swapIndex] = bag[j];
+            bag[j] = tmp;
+          }
+    }
+    const newBag = () => {
+        bag = [0,1,2,3,4,5,6];
+    }
+    return {
+        bag,
+        getBag,
+        getPiece,
+        tetrotetro,
+        newBag
+    }
+})()
 
-
-console.log(bag);
-export default bag;
+export default generate;

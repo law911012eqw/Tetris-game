@@ -5,7 +5,7 @@ This is my tetris game implementation using pure vanilla Javascript.
 - [ ] Create User Interface
 - [ ] Implement a better score and leveling system
 - [ ] Implement Tetromino holder
-- [ ] Implement proper random tetromino generator (tetromino bag)
+- [X] Implement proper random tetromino generator (tetromino bag)
 - [ ] Display upcoming tetrominoes
 - [ ] Display top 5 user high score
 - [X] Display Game Over Screen
