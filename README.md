@@ -4,9 +4,13 @@ This is my tetris game implementation using pure vanilla Javascript.
 ### TODOS
 - [ ] Create User Interface
 - [ ] Implement a better score and leveling system
-- [ ] Implement Tetromino holder
+- [X] Implement Tetromino holder
 - [X] Implement proper random tetromino generator (tetromino bag)
 - [ ] Display upcoming tetrominoes
 - [ ] Display top 5 user high score
 - [X] Display Game Over Screen
-- [ ] Fix gameplay-related bugs
+
+### BUGS to fix
+- [ ] Fix locked tetromino when pressing key against the wall/locked tetromino
+- [ ] Remove tetromino color trail
+- [ ] Displayed tetrominoes copying current pattern when hold  
