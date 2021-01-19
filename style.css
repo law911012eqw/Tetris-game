@@ -2,14 +2,53 @@ canvas{
     display: block;
     border: 4px solid rgb(124,124,124);
 }
+button{
+    background: #ddd;
+    cursor: pointer;
+}
 div{
-    font-size: 31px;
-    font-weight: 700;
     font-family: 'Ubuntu';
     text-align: center;
     margin-left: 40px;
 }
+#canvasContainer{
+    position: relative;
+    width: 360px;
+    height: 720px;
+    z-index: 5;
+}
+#displayController{
+    display: flex;
+    flex-flow: column;
+    justify-content: space-between;
+}
+#modifiableVars{
+    font-size: 31px;
+    font-weight: 700;
+}
 #tetris{
     display: flex;
     justify-content: center;
+}
+#howToStart{
+    margin-bottom: 24px;
+}
+#game-over-modal{
+    position: absolute;
+    left: 4%;
+    top: 30%;
+}
+#game-over-box{
+    margin: 70px;
+    padding: 20px;
+}
+
+/* LEFT UI */
+#tetromino-container{
+    font-size: 22px;
+    margin-right: 12px; 
+}
+#hold-piece{
+    width: 108px;
+    height: 108px;
 }

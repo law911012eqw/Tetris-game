@@ -1,11 +1,13 @@
+import helper from './helpers.js';
+import bag from './bag.js';
 'use strict'
 
 //DOM stuff
-const canvas = document.getElementById('GameCanvas');
+const canvas = document.getElementById('gameCanvas');
 const context = canvas.getContext('2d');
-const levelEl = document.querySelector('#DisplayController > #level');
-const highScoreEl = document.querySelector('#DisplayController > #highScore');
-const scoreEl = document.querySelector('#DisplayController > #score');
+const levelEl = document.querySelector('#modifiableVars > #level');
+const highScoreEl = document.querySelector('#modifiableVars > #highScore');
+const scoreEl = document.querySelector('#modifiableVars > #score');
 
 //board properties
 const BOX = 36;
@@ -19,15 +21,32 @@ let level = 1;
 let lines = 0;
 let score = 0;
 let high = 0;
+
 const defaultSpeed = 1000;
+
 /*multiplies to the default drop speed
 which is statically decremented each level*/
 let spdMultiplier = 1;
+let gameOver = false;
 
 //get the high score if it exists
-if(localStorage.getItem("savedHigh") !== null){
+if (localStorage.getItem("savedHigh") !== null) {
     high = localStorage.getItem("savedHigh");
     highScoreEl.textContent = `High Score: ${high}`;
+}
+
+//display game over modal
+function displayGameOver() {
+    const canvasModal = document.getElementById('canvasContainer');
+    const modal = helper.createModal('game-over-modal','modal');
+    const modalBox = helper.createElement('','game-over-box', 'modal-box','div');
+    const gameOverText = helper.createElement("Game Over",'game-over-text','modal-text','p');
+    const tryAgainBtn = helper.createElement('Try Again','play-again-btn','modal-btn','button');
+    helper.modifyAttr(modalBox,'style','background: white;');
+    helper.modifyAttr(canvasModal,'style',`background: rgba(1,1,1,0.2);`);
+    modal.appendChild(modalBox);
+    modalBox.append(gameOverText,tryAgainBtn);
+    document.getElementById('canvasContainer').append(modal);
 }
 
 //create the board object
@@ -116,7 +135,7 @@ Piece.prototype.lock = function () {
             //increment lines and score
             score += 30;
             lines++;
-            if(lines > level*4){
+            if (lines > level * (4 * 1.2)) {
                 level++;
                 levelEl.textContent = `Level: ${level}`;
                 spdMultiplier -= 0.05;
@@ -133,21 +152,24 @@ Piece.prototype.lock = function () {
 Piece.prototype.collision = function (x, y, piece) {
     for (let r = 0; r < piece.length; r++) {
         for (let c = 0; c < piece.length; c++) {
-            // new coordinates
+
+            // the new coordinates after position change
             let newX = this.x + c + x;
             let newY = this.y + r + y;
-            // skip newY < 0; board[-1] will crush our game
-            if (newY < 0) {
+
+            // skip the empty line from the piece
+            if (!piece[r][c]) {
                 continue;
             }
 
-            // if the square is empty, we skip it
-            if (!piece[r][c]) {
+            // Tetrominoes in the initial pos is an exception rule
+            if (newY < 0) {
                 continue;
             }
 
             // conditions to implement collision system 
             if (newX < 0 || newX >= TOTALCOL || newY >= TOTALROW) {
+                console.log("collide");
                 return true;
             }
 
@@ -158,6 +180,12 @@ Piece.prototype.collision = function (x, y, piece) {
         }
     }
     return false;
+}
+
+Piece.prototype.instantDrop = function () {
+    this.unDraw();
+    this.y + 20;
+    this.draw();
 }
 
 //add filler or refill the board with tetromino pieces
@@ -171,6 +199,15 @@ Piece.prototype.fill = function (color) {
     }
 }
 
+Piece.prototype.instantFill = function (color){
+    for (let r = 0; r < this.activeTetromino.length; r++) {
+        for (let c = 0; c < this.activeTetromino.length; c++) {
+            if (board[c]) {
+                drawSquare(this.x + c, this.y + r, color);
+            }
+        }
+    }
+}
 //draw the tetrominoes
 Piece.prototype.draw = function () {
     this.fill(this.color);
@@ -187,6 +224,7 @@ Piece.prototype.moveDown = function () {
         this.unDraw();
         this.y++;
         this.draw();
+        score++;
     } else {
         this.lock();
         piece = generateTetromino();
@@ -228,13 +266,38 @@ Piece.prototype.rotate = function () {
         this.unDraw();
         this.x += 0;
         //assigned the result as a 
-        this.tetrominoN = (this.tetrominoN + 1) % this.tetromino.length; 
+        this.tetrominoN = (this.tetrominoN + 1) % this.tetromino.length;
         this.activeTetromino = this.tetromino[this.tetrominoN];
         this.draw();
     }
 }
 
-document.addEventListener("keydown", function (e) {
+// drop the piece, one row every second
+let start = Date.now();
+
+function drop() {
+    let now = Date.now();
+    let sec = now - start;
+    if (sec > defaultSpeed * spdMultiplier) {
+        piece.moveDown();
+        start = Date.now(); //reset to now
+    }
+    if (!gameOver) {
+        if (score > high) {
+            high = score;
+            localStorage.setItem("savedHigh", score);
+        }
+        //invokes the function per animation frame end until gameover
+        requestAnimationFrame(drop);
+    }
+    else{
+        displayGameOver();
+        document.getElementById('play-again-btn').onclick = () => location.reload();
+    }
+    console.log(lines);
+}
+
+function tetrominoMovement(e) {
     if (e.key === 'ArrowLeft') {
         piece.moveLeft();
     } else if (e.key === 'ArrowUp') {
@@ -243,33 +306,25 @@ document.addEventListener("keydown", function (e) {
         piece.moveRight();
     } else if (e.key === 'ArrowDown') {
         piece.moveDown();
-        score++;
         scoreEl.textContent = `Score: ${score}`;
-     } //else if (e.key === 'Space'){
-    //     piece.
-    // }
-})
-
-
-// drop the piece, one row every second
-let start = Date.now();
-let gameOver = false;
-function drop() {
-    let now = Date.now();
-    let sec = now - start;
-    if (sec > defaultSpeed * spdMultiplier) {
-        piece.moveDown();
-        start = Date.now();
+    } else if (e.key === ' ') {
+        console.log("insta!!");
+        piece.instantDrop();
     }
-    if (!gameOver) {
-        if(score > high){
-            high = score;
-            localStorage.setItem("savedHigh", score);
-        }
-        //invokes the function per animation frame end until gameover
-        requestAnimationFrame(drop);
-    }
-    console.log(lines);
 }
 
-drop();
+//enable while in-game functionality
+document.addEventListener("dblclick", function() { startGame() });
+
+function startGame(){
+    const displayC = document.getElementById("displayController");
+    const startInstruct = document.getElementById("howToStart");
+
+    //automatic tetromino fall
+    drop();
+    displayC.removeChild(startInstruct);
+    console.log(gameOver);
+
+    //add tetrominoes movement
+    document.addEventListener("keydown", function(e){tetrominoMovement(e)});
+}
