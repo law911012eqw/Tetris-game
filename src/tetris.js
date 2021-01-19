@@ -1,10 +1,17 @@
 import helper from './helpers.js';
-import bag from './bag.js';
+import generate from './bag.js';
 'use strict'
 
 //DOM stuff
+//main canvas
 const canvas = document.getElementById('gameCanvas');
 const context = canvas.getContext('2d');
+
+//tetrominoes canvas 
+const holdCanvas = document.getElementById('hold-piece');
+const holdContext = holdCanvas.getContext('2d');
+
+//level and scores
 const levelEl = document.querySelector('#modifiableVars > #level');
 const highScoreEl = document.querySelector('#modifiableVars > #highScore');
 const scoreEl = document.querySelector('#modifiableVars > #score');
@@ -13,8 +20,9 @@ const scoreEl = document.querySelector('#modifiableVars > #score');
 const BOX = 36;
 const TOTALROW = 20;
 const TOTALCOL = 10;
+//"rgba(24,36,36, 0.9)" - old filler color
 const FILLER = "rgba(24,36,36, 0.9)"; //unoccupied space 
-
+const T_BOX = 45;
 
 //modifiable variables
 let level = 1;
@@ -62,16 +70,16 @@ for (let r = 0; r < TOTALROW; r++) {
 function drawBoard() {
     for (let r = 0; r < TOTALROW; r++) {
         for (let c = 0; c < TOTALCOL; c++) {
-            drawSquare(c, r, board[r][c]);
+            drawSquare(context, c, r, board[r][c], BOX);
         }
     }
 }
 
-function drawSquare(x, y, color) {
-    context.fillStyle = color;
-    context.fillRect(x * BOX, y * BOX, BOX, BOX);
-    context.strokeStyle = "rgb(111,111,111,0.4)";
-    context.strokeRect(x * BOX, y * BOX, BOX, BOX);
+function drawSquare(ctx, x, y, color, size) {
+    ctx.fillStyle = color;
+    ctx.fillRect(x * size, y * size, size, size);
+    ctx.strokeStyle = "rgb(111,111,111,0.4)";
+    ctx.strokeRect(x * size, y * size, size, size);
 }
 
 drawBoard();
@@ -82,21 +90,42 @@ function Piece(tetromino, color) {
     this.tetromino = tetromino;
     //initial piece pattern
     this.tetrominoN = 0;
+    this.tetrominoFirst = this.tetromino[0];
     //set the next piece to active state
     this.activeTetromino = this.tetromino[this.tetrominoN];
+    this.holdTetromino = null;
     /*forcing the tetronimoes to the initial pos
     when the piece is geenrated*/
     this.x = 3;
     this.y = -2;
 }
 
-// generate random pieces
-function generateTetromino() {
-    let r = Math.floor(Math.random() * TETROMINOES.length)
+//generate a bag of tetrominoes
+generate.tetrotetro();
+let bag = generate.getBag();
+
+//generate random order pieces until it resets to generate again when it's empty
+function generatePiece(){
+    if (bag.length === 0) { 
+        generate.newBag();
+        generate.tetrotetro(); 
+        bag = generate.getBag();
+    }
+    console.log(generate.getBag());
+    let r = getPiece();
+
     return new Piece(TETROMINOES[r][0], TETROMINOES[r][1]);
 }
 
-let piece = generateTetromino();
+//get the current piece from the generator function
+function getPiece(){
+    let r = generate.getPiece(0);
+    generate.current = bag.shift();
+    return r;
+}
+
+//assigned random tetromino as a current piece
+let piece = generatePiece();
 
 Piece.prototype.lock = function () {
     for (let r = 0; r < this.activeTetromino.length; r++) {
@@ -114,7 +143,7 @@ Piece.prototype.lock = function () {
             board[this.y + r][this.x + c] = this.color;
         }
     }
-
+    if (enableHold === false) { enableHold = true; }
     // remove full rows
     for (let r = 0; r < TOTALROW; r++) {
         let isRowFull = true;
@@ -162,7 +191,7 @@ Piece.prototype.collision = function (x, y, piece) {
                 continue;
             }
 
-            // Tetrominoes in the initial pos is an exception rule
+            // Tetromino in the initial pos is an exception rule
             if (newY < 0) {
                 continue;
             }
@@ -189,68 +218,74 @@ Piece.prototype.instantDrop = function () {
 }
 
 //add filler or refill the board with tetromino pieces
-Piece.prototype.fill = function (color) {
+Piece.prototype.fill = function (ctx, color) {
     for (let r = 0; r < this.activeTetromino.length; r++) {
         for (let c = 0; c < this.activeTetromino.length; c++) {
             if (this.activeTetromino[r][c]) {
-                drawSquare(this.x + c, this.y + r, color);
+                drawSquare(ctx, this.x + c, this.y + r, color, BOX);
             }
         }
     }
 }
 
-Piece.prototype.instantFill = function (color){
+Piece.prototype.displayTetrominoes = function (ctx){
+    ctx.clearRect(0, 0, 280, 140);
     for (let r = 0; r < this.activeTetromino.length; r++) {
         for (let c = 0; c < this.activeTetromino.length; c++) {
-            if (board[c]) {
-                drawSquare(this.x + c, this.y + r, color);
+            if (this.activeTetromino[r][c]) {
+                drawSquare(ctx, c+1.5, r, this.color, T_BOX);
+                console.log(c, r);
             }
         }
     }
 }
 //draw the tetrominoes
-Piece.prototype.draw = function () {
-    this.fill(this.color);
+Piece.prototype.draw = function (ctx) {
+    this.fill(ctx, this.color);
 }
 
 //undraw the tetrominoes
-Piece.prototype.unDraw = function () {
-    this.fill(FILLER);
+Piece.prototype.unDraw = function (ctx) {
+    this.fill(ctx, FILLER);
+}
+
+Piece.prototype.display = function () {
+    drawSquare(holdContext, this.x, this.y, this.color, BOX);
 }
 
 //functionality when pressing keys
 Piece.prototype.moveDown = function () {
     if (!this.collision(0, 1, this.activeTetromino)) {
-        this.unDraw();
+        this.unDraw(context);
         this.y++;
-        this.draw();
+        this.draw(context);
         score++;
     } else {
         this.lock();
-        piece = generateTetromino();
+        piece = generatePiece();
     }
 }
 
 Piece.prototype.moveLeft = function () {
     if (!this.collision(-1, 0, this.activeTetromino)) {
-        this.unDraw();
+        this.unDraw(context);
         this.x--;
-        this.draw();
+        this.draw(context);
     }
     else {
         this.lock();
-        piece = generateTetromino();
+        piece = generatePiece();
     }
 }
 
 Piece.prototype.moveRight = function () {
     if (!this.collision(1, 0, this.activeTetromino)) {
-        this.unDraw();
+        this.unDraw(context);
         this.x++;
-        this.draw();
+        this.draw(context);
     } else {
         this.lock();
-        piece = generateTetromino();
+        piece = generatePiece();
     }
 }
 
@@ -263,15 +298,46 @@ Piece.prototype.rotate = function () {
     }
 
     if (!this.collision(0, 0, nextPattern)) {
-        this.unDraw();
+        this.unDraw(context);
         this.x += 0;
         //assigned the result as a 
         this.tetrominoN = (this.tetrominoN + 1) % this.tetromino.length;
         this.activeTetromino = this.tetromino[this.tetrominoN];
-        this.draw();
+        this.draw(context);
     }
 }
 
+//hold the current piece
+//it disables after using once until dropping the piece
+let enableHold = true;
+Piece.prototype.hold = function() {
+    if (generate.hold.length === 0 && enableHold === true){
+        //trash is always the current piece freshly coming from the bag
+        //assigning the trash to the current
+        generate.hold = generate.current;
+
+        //undraw the hold and draw the current
+        this.unDraw(context);
+        piece = generatePiece();
+
+        enableHold = false;
+        this.displayTetrominoes(holdContext);
+        console.log('should only work once');
+    }
+    else if(enableHold === true && generate.hold.length !== 0){
+        //swap the position of the hold and current piece
+        generate.holdToCurrent(generate.hold); 
+        generate.hold = generate.current; 
+        this.unDraw(context);
+
+        //generate the swapped piece
+        piece = generatePiece();
+
+        this.displayTetrominoes(holdContext);
+        enableHold = false;
+    }
+    console.log(`hold is ${generate.hold} and current piece is ${generate.current}`);
+}
 // drop the piece, one row every second
 let start = Date.now();
 
@@ -310,21 +376,26 @@ function tetrominoMovement(e) {
     } else if (e.key === ' ') {
         console.log("insta!!");
         piece.instantDrop();
+    } else if (e.key === 'C' || e.key === 'c') {
+        piece.hold();
     }
 }
 
 //enable while in-game functionality
-document.addEventListener("dblclick", function() { startGame() });
+document.addEventListener("dblclick", function() { 
+    startGame() ;
+}, { once: true }); //Can only be invoked once
 
+document.removeEventListener("dblclick", startGame);
 function startGame(){
     const displayC = document.getElementById("displayController");
     const startInstruct = document.getElementById("howToStart");
 
-    //automatic tetromino fall
+    //automatic tetromino fall in a relative speed
     drop();
-    displayC.removeChild(startInstruct);
-    console.log(gameOver);
-
+    if(displayC.contains(startInstruct)){
+        displayC.removeChild(startInstruct);
+    }
     //add tetrominoes movement
     document.addEventListener("keydown", function(e){tetrominoMovement(e)});
 }

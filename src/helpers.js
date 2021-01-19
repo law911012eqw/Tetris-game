@@ -1,3 +1,4 @@
+//DOM helpers
 class helper{
     static modifyAttr(DOM,type,value){
         DOM.setAttribute(type,value);
