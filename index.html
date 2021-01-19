@@ -7,15 +7,32 @@
     </head>
     <body>
         <div id="tetris">
-            <canvas id="GameCanvas" width="360px" height="720px"> </canvas>
-            <div id="DisplayController">
-                <p id="level">Level: 1</p>
-                <p id="highScore">High Score: 0</p>
-                <p id="score">Score: 0</p>
+            <div id="tetromino-container">
+                <div id="hold-container">
+                    <p id="hold-piece-container">HOLD</p>
+                    <div id="hold-piece"></div>
+                </div>
+                <div id="nextTetrominoes">
+                    <p id="next-text">NEXT</p>
+                </div>
+            </div>
+            <div id="canvasContainer">
+                <canvas id="gameCanvas" width="360px" height="720px"></canvas>
+            </div>
+            <div id="displayController">
+                <div id ="modifiableVars">                
+                    <p id="level">Level: 1</p>
+                    <p id="highScore">High Score: 0</p>
+                    <p id="score">Score: 0</p>
+                </div>
+                <div id="howToStart">
+                    Double click to start
+                </div>
             </div>
         </div>
-
     </body>
-    <script src="tetrominoes.js"></script>
-    <script src="tetris.js"></script>
+    <script type="module" src="src/bag.js"></script>
+    <script type="module" src="src/helpers.js"></script>
+    <script src="src/tetrominoes.js"></script>
+    <script type="module" src="src/tetris.js"></script>
 </html>
