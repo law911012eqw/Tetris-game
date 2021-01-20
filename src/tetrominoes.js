@@ -1,4 +1,4 @@
-//tetrominoes: 0 = vacant, 1 = occupied
+//tetrominoes: 0 = unoccupied, 1 = occupied
 const I = [
 	[
 		[0, 0, 0, 0],
