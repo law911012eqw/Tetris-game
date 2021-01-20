@@ -37,7 +37,7 @@ const TOTALROW = 20;
 const TOTALCOL = 10;
 
 //"rgba(24,36,36, 0.9)" - old filler color
-const FILLER = "rgba(24,36,36, 0.9)"; //unoccupied space 
+const FILLER = "rgb(24,36,36)"; //unoccupied space 
 const T_BOX = 45;
 
 //highscores
@@ -109,7 +109,7 @@ function drawBoard() {
 function drawSquare(ctx, x, y, color, size) {
     ctx.fillStyle = color;
     ctx.fillRect(x * size, y * size, size, size);
-    ctx.strokeStyle = "rgb(111,111,111,0.4)";
+    ctx.strokeStyle = "rgba(24,32,32,0.8)";
     ctx.strokeRect(x * size, y * size, size, size);
 }
 
@@ -174,6 +174,7 @@ function displayNextPieces() {
     displayTetrominoes(TETROMINOES[r3][0], TETROMINOES[r3][1], nextContext3);
     displayTetrominoes(TETROMINOES[r4][0], TETROMINOES[r4][1], nextContext4);
 }
+
 //assigned random tetromino as a current piece
 let piece = generatePiece();
 
@@ -182,7 +183,7 @@ function Piece(tetromino, color) {
     this.color = color;
     this.tetromino = tetromino;
     //initial piece pattern
-    this.tetrominoN = 0;
+    this.tetrominoN = 0; 
     this.tetrominoFirst = this.tetromino[0];
     //set the next piece to active state
     this.activeTetromino = this.tetromino[this.tetrominoN];
@@ -198,10 +199,11 @@ Piece.prototype.lock = function () {
     for (let r = 0; r < this.activeTetromino.length; r++) {
         for (let c = 0; c < this.activeTetromino.length; c++) {
             // unoccupied spaces are ignored
-            if (!this.activeTetromino[r][c]) {
+            if ( !this.activeTetromino[r][c]) {
                 continue;
             }
-            // lock once a tetromino sqr reached the forbidden index
+
+            // game over once a tetromino sqr reached the forbidden index
             if (this.y + r < 0) {
                 gameOver = true;
                 break;
@@ -288,7 +290,7 @@ Piece.prototype.fill = function (ctx, color) {
         for (let c = 0; c < this.activeTetromino.length; c++) {
             if (this.activeTetromino[r][c]) {
                 drawSquare(ctx, this.x + c, this.y + r, color, BOX);
-            }
+            } 
         }
     }
 }
@@ -307,12 +309,12 @@ function displayTetrominoes(currentTetromino, currentColor, ctx) {
     }
 }
 
-//draw the tetrominoes
+//draw the current tetromino
 Piece.prototype.draw = function (ctx) {
     this.fill(ctx, this.color);
 }
 
-//undraw the tetrominoes
+//undraw the current tetromino
 Piece.prototype.unDraw = function (ctx) {
     this.fill(ctx, FILLER);
 }
@@ -339,15 +341,12 @@ Piece.prototype.instantDrop = function () {
     this.lock();
     piece = generatePiece();
 }
+
 Piece.prototype.moveLeft = function () {
     if (!this.collision(-1, 0, this.activeTetromino)) {
         this.unDraw(context);
         this.x--;
         this.draw(context);
-    }
-    else {
-        this.lock();
-        piece = generatePiece();
     }
 }
 
@@ -356,10 +355,7 @@ Piece.prototype.moveRight = function () {
         this.unDraw(context);
         this.x++;
         this.draw(context);
-    } else {
-        this.lock();
-        piece = generatePiece();
-    }
+    } 
 }
 
 Piece.prototype.rotate = function () {
@@ -510,6 +506,7 @@ function startGame() {
     if (displayC.contains(startInstruct)) {
         displayC.removeChild(startInstruct);
     }
+
     //add tetrominoes movement
     document.addEventListener("keydown", function (e) { tetrominoMovement(e) });
 }

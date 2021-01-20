@@ -17,6 +17,5 @@ These are the following rules:
 - [X] Display Game Over Screen
 
 ### BUGS to fix
-- Fix locked tetromino when pressing key against the wall/locked tetromino
-- Remove tetromino color trail
 - Sometimes current piece is slowly generated
+- Fix key binding/behavior and clunky movements
