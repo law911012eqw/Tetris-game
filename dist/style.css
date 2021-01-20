@@ -1,3 +1,9 @@
+html{
+    font-family: 'Ubuntu';
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
 canvas{
     display: block;
 }
@@ -9,7 +15,6 @@ button{
     cursor: pointer;
 }
 div{
-    font-family: 'Ubuntu';
     text-align: center;
     margin-left: 40px;
 }
@@ -23,10 +28,12 @@ div{
     display: flex;
     flex-flow: column;
     justify-content: space-between;
+    width: 300px;
 }
 #modifiableVars{
     font-size: 31px;
     font-weight: 700;
+    text-align: left;
 }
 #tetris{
     display: flex;
@@ -34,6 +41,7 @@ div{
 }
 #howToStart{
     margin-bottom: 24px;
+    text-align: left;
 }
 #game-over-modal{
     position: absolute;
@@ -53,4 +61,18 @@ div{
 #hold-piece, .next-piece{
     width: 160px;
     height: 80px;
+}
+
+/* high scores */
+#high-scores{
+    position: absolute;
+    top: 0;
+    left: 0;
+    text-align: left;
+}
+#high-scores{
+    font-size: 1.5rem;
+}
+#lbl-high-scores{
+    border-bottom: 2px solid black;
 }

@@ -13,8 +13,14 @@ const holdContext = holdCanvas.getContext('2d');
 
 //level and scores
 const levelEl = document.querySelector('#modifiableVars > #level');
-const highScoreEl = document.querySelector('#modifiableVars > #highScore');
 const scoreEl = document.querySelector('#modifiableVars > #score');
+
+//DOM instances for high scores
+const highScoreEl = document.querySelector('#high-scores > #high-score1');
+const highScoreEl2 = document.querySelector('#high-scores > #high-score2');
+const highScoreEl3 = document.querySelector('#high-scores > #high-score3');
+const highScoreEl4 = document.querySelector('#high-scores > #high-score4');
+const highScoreEl5 = document.querySelector('#high-scores > #high-score5');
 
 //board properties
 const BOX = 36;
@@ -28,7 +34,13 @@ const T_BOX = 45;
 let level = 1;
 let lines = 0;
 let score = 0;
+
+//highscores
 let high = 0;
+let high2 = 0;
+let high3 = 0;
+let high4 = 0;
+let high5 = 0;
 
 const defaultSpeed = 1000;
 
@@ -37,11 +49,31 @@ which is statically decremented each level*/
 let spdMultiplier = 1;
 let gameOver = false;
 
-//get the high score if it exists
+//get the high scores if it exists
 if (localStorage.getItem("savedHigh") !== null) {
     high = localStorage.getItem("savedHigh");
-    highScoreEl.textContent = `High Score: ${high}`;
+    highScoreEl.textContent = `1: ${high}`;
 }
+if (localStorage.getItem("savedHigh2") !== null) {
+    high2 = localStorage.getItem("savedHigh2");
+    highScoreEl2.textContent = `2: ${high2}`;
+}
+
+if (localStorage.getItem("savedHigh3") !== null) {
+    high3 = localStorage.getItem("savedHigh3");
+    highScoreEl3.textContent = `3: ${high3}`;
+}
+
+if (localStorage.getItem("savedHigh4") !== null) {
+    high4 = localStorage.getItem("savedHigh4");
+    highScoreEl4.textContent = `4: ${high4}`;
+}
+
+if (localStorage.getItem("savedHigh5") !== null) {
+    high5 = localStorage.getItem("savedHigh5");
+    highScoreEl5.textContent = `5: ${high5}`;
+}
+
 
 //display game over modal
 function displayGameOver() {
@@ -82,6 +114,9 @@ function drawSquare(ctx, x, y, color, size) {
     ctx.strokeRect(x * size, y * size, size, size);
 }
 
+function clearCanvas(ctx) {
+    ctx.clearRect(0, 0, 280, 140);
+}
 drawBoard();
 
 //class consisting of initial pos, current active and properties
@@ -229,7 +264,7 @@ Piece.prototype.fill = function (ctx, color) {
 }
 
 Piece.prototype.displayTetrominoes = function (ctx){
-    ctx.clearRect(0, 0, 280, 140);
+    clearCanvas(holdContext);
     for (let r = 0; r < this.activeTetromino.length; r++) {
         for (let c = 0; c < this.activeTetromino.length; c++) {
             if (this.activeTetromino[r][c]) {
@@ -349,14 +384,39 @@ function drop() {
         start = Date.now(); //reset to now
     }
     if (!gameOver) {
-        if (score > high) {
-            high = score;
-            localStorage.setItem("savedHigh", score);
-        }
         //invokes the function per animation frame end until gameover
         requestAnimationFrame(drop);
     }
-    else{
+    else {
+        //high score system
+        let currentScore = 0; //temporary var for current score
+        let temp = 0; //temporary var for all high scores
+        currentScore = score;
+        if (score > localStorage.getItem("savedHigh")) {
+            temp = localStorage.getItem("savedHigh");
+            localStorage.setItem("savedHigh", score);
+            score = temp;
+        } 
+        if (score > high2) {
+            temp = localStorage.getItem("savedHigh2");
+            localStorage.setItem("savedHigh2", score);
+            score = temp;
+        } 
+        if (score > high3) {
+            temp = localStorage.getItem("savedHigh3");
+            localStorage.setItem("savedHigh3", score);
+            score = temp;
+        } 
+        if (score > high4) {
+            temp = localStorage.getItem("savedHigh4");
+            localStorage.setItem("savedHigh4", score);
+            score = temp;
+        } 
+        if (score > high5) {
+            temp = localStorage.getItem("savedHigh5");
+            localStorage.setItem("savedHigh5", score);
+        }
+        score = currentScore;
         displayGameOver();
         document.getElementById('play-again-btn').onclick = () => location.reload();
     }
