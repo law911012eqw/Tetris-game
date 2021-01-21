@@ -4,7 +4,7 @@ const generate = (() => {
     let refillBag = [0,1,2,3,4,5,6]; //a bag that refills the initial bag
     let hold = []; //hold piece
     let current = -1; //current piece
-    const totalPieces = 7; //total existing tetrominoes
+    const TOTAL_PIECES = 7; //total existing tetrominoes
     return {
         hold,
         current,
@@ -17,7 +17,7 @@ const generate = (() => {
         //swapping each elements of the existing array
         tetrotetro(b) {  
             if (refillBag.length === 0) { generate.newBag(); }
-            for (let j = totalPieces - 1; j >= 0; j--) {
+            for (let j = TOTAL_PIECES - 1; j >= 0; j--) {
                 let swapIndex = Math.floor(Math.random() * j);
                 let tmp = b[swapIndex];
                 b[swapIndex] = b[j];

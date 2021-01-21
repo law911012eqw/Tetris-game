@@ -41,17 +41,21 @@ div {
           justify-content: center;
 }
 
-#game-over-modal {
-  position: absolute;
-  left: 4%;
-  top: 30%;
-}
-
 #game-over-box {
-  margin: 50px;
-  padding: 20px;
+    margin: 40px;
+    padding: 20px;
+    position: absolute;
+    font-size: 25px;
+    left: 10%;
+    top: 30%;
 }
 
+#play-again-btn {
+    font-size: 16px;
+}
+#play-again-btn:hover{
+  background: #fff;
+}
 /*tetrominoes contaner*/
 #hold-container, #nextTetrominoes {
   font-size: 22px;

@@ -31,6 +31,3 @@ These are the following rules that are new to me:
 - [X] Display Game Over Screen
 - [X] Reverse piece rotation
 - [X] Add Hard Drop 
-
-### BUGS to fix
-- Current piece is slowly generated especially in early levels

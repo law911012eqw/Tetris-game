@@ -1,6 +1,7 @@
 import helper from './helpers.js';
 import generate from './bag.js';
 import obj from './objective.js';
+import { KEY, KEY_BIND, KEY_EVENTS, pressedKeys } from './events.js'
 'use strict'
 
 //DOM stuff
@@ -31,6 +32,9 @@ const highScoreEl3 = document.querySelector('#high-scores > #high-score3');
 const highScoreEl4 = document.querySelector('#high-scores > #high-score4');
 const highScoreEl5 = document.querySelector('#high-scores > #high-score5');
 
+const displayC = document.getElementById("displayController");
+const startInstruct = document.getElementById("howToStart");
+
 //board properties
 const BOX = 30;
 const TOTALROW = 20;
@@ -48,6 +52,9 @@ let high4 = 0;
 let high5 = 0;
 
 let gameOver = false;
+
+//assigning the event function to a variable to be removed later
+let tetrisKeydownEvent = tetrisKeyOnce;
 
 //get the high scores if it exists
 if (localStorage.getItem("savedHigh") !== null) {
@@ -77,15 +84,13 @@ if (localStorage.getItem("savedHigh5") !== null) {
 //display game over modal
 function displayGameOver() {
     const canvasModal = document.getElementById('canvasContainer');
-    const modal = helper.createModal('game-over-modal', 'modal');
     const modalBox = helper.createElement('', 'game-over-box', 'modal-box', 'div');
     const gameOverText = helper.createElement("Game Over", 'game-over-text', 'modal-text', 'p');
     const tryAgainBtn = helper.createElement('Try Again', 'play-again-btn', 'modal-btn', 'button');
-    helper.modifyAttr(modalBox, 'style', 'background: white;');
-    helper.modifyAttr(canvasModal, 'style', `background: rgba(1,1,1,0.2);`);
-    modal.appendChild(modalBox);
+
+    helper.modifyAttr(canvas, 'style', `opacity: 0.4;`);
     modalBox.append(gameOverText, tryAgainBtn);
-    document.getElementById('canvasContainer').append(modal);
+    canvasModal.append(modalBox);
 }
 
 //create the board object
@@ -119,7 +124,8 @@ function clearCanvas(ctx) {
 }
 drawBoard();
 
-function levelForward(r){
+//Increases level
+function levelForward(r) {
     obj.lineClear();
     obj.scoreAdd(obj.oneDropCombo(r));
     obj.spdUp();
@@ -142,10 +148,8 @@ function generatePiece() {
         refiller = generate.getRefillBag();
     }
     let r = getPiece();
-    displayNextPieces();
-    passPiece();
-    console.log(generate.getBag());
-    console.log(generate.getRefillBag());
+    displayNextPieces(); //display the next pieces after the current piece
+    passPiece(); //pass the next piece to the initial bag
     return new Piece(TETROMINOES[r][0], TETROMINOES[r][1]);
 }
 
@@ -182,14 +186,16 @@ let piece = generatePiece();
 function Piece(tetromino, color) {
     this.color = color;
     this.tetromino = tetromino;
+
     //initial piece pattern
-    this.tetrominoN = 0; 
+    this.tetrominoN = 0;
     this.tetrominoFirst = this.tetromino[0];
+
     //set the next piece to active state
     this.activeTetromino = this.tetromino[this.tetrominoN];
 
     /*forcing the tetronimoes to the initial pos
-    when the piece is geenrated*/
+    when the piece is generated*/
     this.x = 3;
     this.y = -1;
 }
@@ -198,8 +204,9 @@ function Piece(tetromino, color) {
 Piece.prototype.lock = function () {
     for (let r = 0; r < this.activeTetromino.length; r++) {
         for (let c = 0; c < this.activeTetromino.length; c++) {
+
             // unoccupied spaces are ignored
-            if ( !this.activeTetromino[r][c]) {
+            if (!this.activeTetromino[r][c]) {
                 continue;
             }
 
@@ -208,14 +215,15 @@ Piece.prototype.lock = function () {
                 gameOver = true;
                 break;
             }
+
             // lock the piece
             board[this.y + r][this.x + c] = this.color;
         }
     }
+
     //toggle hold functionality
     if (enableHold === false) { enableHold = true; }
 
-    let lineCounter = 0;
     // remove full rows
     for (let r = 0; r < TOTALROW; r++) {
         let isRowFull = true;
@@ -224,18 +232,19 @@ Piece.prototype.lock = function () {
             isRowFull = isRowFull && (board[r][c] != FILLER);
         }
         if (isRowFull) {
-            lineCounter += 1;
             //filled rows are cleared
             for (let y = r; y > 1; y--) {
                 for (let c = 0; c < TOTALCOL; c++) {
                     board[y][c] = board[y - 1][c];
                 }
             }
-            // the top row board[0][..] has no row above it
+
+            levelForward(r);
+
+            /*adding new unoccupied lines above the board after line clear */
             for (let c = 0; c < TOTALCOL; c++) {
                 board[0][c] = FILLER;
             }
-            levelForward(r);
         }
     }
     // update the board
@@ -258,14 +267,8 @@ Piece.prototype.collision = function (x, y, piece) {
                 continue;
             }
 
-            // Tetromino in the initial pos is an exception rule
-            if (newY < 0) {
-                continue;
-            }
-
             // conditions to implement collision system 
             if (newX < 0 || newX >= TOTALCOL || newY >= TOTALROW) {
-                console.log("collide");
                 return true;
             }
 
@@ -290,7 +293,7 @@ Piece.prototype.fill = function (ctx, color) {
         for (let c = 0; c < this.activeTetromino.length; c++) {
             if (this.activeTetromino[r][c]) {
                 drawSquare(ctx, this.x + c, this.y + r, color, BOX);
-            } 
+            }
         }
     }
 }
@@ -327,17 +330,16 @@ Piece.prototype.moveDown = function () {
         this.draw(context);
         obj.scoreAdd(1);
     } else {
-        this.lock();
         piece = generatePiece();
+        this.lock();
     }
 }
 
 Piece.prototype.instantDrop = function () {
     while (!this.collision(0, 1, this.activeTetromino)) {
-        this.unDraw(context);
         this.y++;
     }
-    this.draw(context);
+    //this.draw(context);
     this.lock();
     piece = generatePiece();
 }
@@ -355,22 +357,47 @@ Piece.prototype.moveRight = function () {
         this.unDraw(context);
         this.x++;
         this.draw(context);
-    } 
+    }
 }
 
 Piece.prototype.rotate = function () {
+    //assigned the next pattern to check if it collides to a wall
     let nextPattern = this.tetromino[(this.tetrominoN + 1) % this.tetromino.length];
+    let shift = 0;
 
-    //shift to the opposite direction if it hits the wall
+    //do the wall kick rule
     if (this.collision(0, 0, nextPattern)) {
         this.x > TOTALCOL / 2 ? shift = -1 : shift = 1;
     }
 
+    //check collision during rotate frame
     if (!this.collision(0, 0, nextPattern)) {
         this.unDraw(context);
         this.x += 0;
-        //assigned the result as a 
+
+        //switch to next pattern
         this.tetrominoN = (this.tetrominoN + 1) % this.tetromino.length;
+        this.activeTetromino = this.tetromino[this.tetrominoN];
+        this.draw(context);
+    }
+}
+
+Piece.prototype.reverseRotate = function () {
+    let nextPattern = this.tetromino[(this.tetrominoN + this.tetromino.length - 1) % this.tetromino.length];
+    let shift = 0;
+
+    //do the wall kick
+    if (this.collision(0, 0, nextPattern)) {
+        this.x > TOTALCOL / 2 ? shift = -1 : shift = 1;
+    }
+
+    //check collision during rotate frame
+    if (!this.collision(0, 0, nextPattern)) {
+        this.unDraw(context);
+        this.x += 0;
+
+        //switch to next pattern
+        this.tetrominoN = (this.tetrominoN + this.tetromino.length - 1) % this.tetromino.length;
         this.activeTetromino = this.tetromino[this.tetrominoN];
         this.draw(context);
     }
@@ -379,6 +406,7 @@ Piece.prototype.rotate = function () {
 //hold the current piece
 //it disables after using once until the piece drops
 let enableHold = true;
+
 Piece.prototype.hold = function () {
     let c = generate.current;
     //assigning the current piece as a hold piece
@@ -406,12 +434,12 @@ Piece.prototype.hold = function () {
 
 function holdPiece() {
     if (generate.hold.length === 0 && enableHold === true) {
-        piece.hold(); 
+        piece.hold();
     }
     else if (enableHold === true && generate.hold.length !== 0) {
         //swap the position of the hold and current piece
         generate.holdToCurrent(generate.hold);
-        piece.hold(); 
+        piece.hold();
     }
 }
 
@@ -443,70 +471,111 @@ function manageHighScores() {
         temp = localStorage.getItem("savedHigh5");
         localStorage.setItem("savedHigh5", score);
     }
-    score = obj.getScore();  
+    score = obj.getScore();
     displayGameOver();
+    document.removeEventListener("keydown", tetrisKeydownEvent);
     document.getElementById('play-again-btn').onclick = () => location.reload();
 }
 
-// drop the piece, one row every second
 let start = Date.now();
 
+//automatic tetromino fall in a relative speed
 function drop() {
     let now = Date.now();
     let sec = now - start;
     let spdMultiplier = obj.getCurrentSpdMultiplier();
     if (sec > obj.defaultSpd * spdMultiplier) {
+
         piece.moveDown();
         start = Date.now(); //reset to now
     }
     //infinitely invokes the function until the game is over
-    if (!gameOver) {
-        requestAnimationFrame(drop);
-    }
-    else {
-        manageHighScores();
-    }
+    //when the game is over it updates the highscores if score is in top5
+    !gameOver ? requestAnimationFrame(drop) : manageHighScores();
 }
 
-function tetrominoMovement(e) {
-    if (e.key === 'ArrowLeft') {
-        piece.moveLeft();
-    } else if (e.key === 'ArrowUp') {
-        piece.rotate();
-    } else if (e.key === 'ArrowRight') {
-        piece.moveRight();
-    } else if (e.key === 'ArrowDown') {
+//Keys that can be repetitively called when pressed
+/* Note: The purpose of this chunk of code was to separate the repetitive keys and
+other keys to manually code the "once keys successfully" until I discovered the e.repeat
+property */
+/*Although it is a good practice doing this method when the coder desire complex movements
+using key events especially in games like this.*/
+function tetrisKeyRepetitive() {
+    //allow the piece to move sidewards and downwards simultaneously
+    if (pressedKeys[KEY.LEFT] || pressedKeys[KEY.RIGHT]) {
+        if (pressedKeys[KEY.LEFT] && pressedKeys[KEY.DOWN]) {
+            piece.moveLeft();
+            piece.moveDown();
+            scoreEl.textContent = `Score: ${obj.getScore()}`;
+        } else if (pressedKeys[KEY.RIGHT] && pressedKeys[KEY.DOWN]) {
+            piece.moveRight();
+            piece.moveDown();
+            scoreEl.textContent = `Score: ${obj.getScore()}`;
+        } else if (pressedKeys[KEY.LEFT]) {
+            piece.moveLeft();
+        } else if (pressedKeys[KEY.RIGHT]) {
+            piece.moveRight();
+        }
+    } else if (pressedKeys[KEY.DOWN]) {
         piece.moveDown();
         scoreEl.textContent = `Score: ${obj.getScore()}`;
+    }
+}
+
+//key controls without endlessly firing when being hold
+function tetrisKeyOnce(e) {
+    if (e.repeat) { return; }
+    if (e.key === 'ArrowUp') {
+        piece.rotate();
+    } else if (e.key === 'Z' || e.key === 'z') {
+        piece.reverseRotate();
     } else if (e.key === 'C' || e.key === 'c') {
         holdPiece();
-    } else if (e.key === ' ') { 
+    } else if (e.key === ' ') {
         piece.instantDrop();
     }
 }
 
-function hardDrop(e) {
-    if (e.key === ' ') { 
-        piece.instantDrop();
-    }
-}
-
-//enable while in-game functionality
-//Can only be invoked once
+//enable in-game functionality -- can only be invoked once until it's over
 document.addEventListener("dblclick", function () {
     startGame();
-}, { once: true }); 
+}, { once: true });
 
+//Functionalities that are only required to be called once
 function startGame() {
-    const displayC = document.getElementById("displayController");
-    const startInstruct = document.getElementById("howToStart");
-
-    //automatic tetromino fall in a relative speed
     drop();
     if (displayC.contains(startInstruct)) {
         displayC.removeChild(startInstruct);
     }
 
-    //add tetrominoes movement
-    document.addEventListener("keydown", function (e) { tetrominoMovement(e) });
+    //pressed keys are appended within the used key holder
+    document.addEventListener("keydown", function (e) {
+        const currentKey = KEY_BIND[e.key];
+
+        //disallow the events to have a default behavior 
+        if (KEY_EVENTS.includes(currentKey)) {
+            e.preventDefault();
+        }
+        //disallow unmatched key controls
+        if (currentKey === undefined || pressedKeys[currentKey]) { return; }
+
+        //Moves to the left in default when left && right pressed together
+        if (currentKey === KEY.LEFT && pressedKeys[KEY.RIGHT]) {
+            pressedKeys[KEY.LEFT] = false;
+        } else if (currentKey === KEY.RIGHT && pressedKeys[KEY.LEFT]) {
+            pressedKeys[KEY.LEFT] = false;
+        }
+
+        pressedKeys[currentKey] = true;
+    });
+
+    document.addEventListener("keydown", tetrisKeyOnce);
+    document.addEventListener("keyup", function (e) {
+        const currentKey = KEY_BIND[e.key];
+        // only handle game control keys
+        if (currentKey === undefined) { return; }
+        // assigned the pressed key to false
+        pressedKeys[currentKey] = false;
+    });
+    document.addEventListener("keydown", tetrisKeyRepetitive);
 }

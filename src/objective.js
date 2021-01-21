@@ -5,13 +5,13 @@ const level = (() => {
     let lines = 0;
     let score = 0;
     //1000 = 1 second
-    const defaultSpd = 1000;
+    const defaultSpd = 900;
     /*multiplies to the default drop speed
     which is statically decremented each level*/
     let currentMultiplier = 1;
-    const speedMultiplier1 = 0.10;
-    const speedMultiplier2 = 0.05;
-    const speedMultiplier3 = 0.03;
+    const SPD_MULTIPLIER1 = 0.10;
+    const SPD_MULTIPLIER2 = 0.05;
+    const SPD_MULTIPLIER3 = 0.03;
     return {
         defaultSpd,
         getScore() {
@@ -31,12 +31,13 @@ const level = (() => {
             if (lines > (Math.round(1.2 * lvl * 8))) {
                 lvl++;
                 if(lvl < 6){
-                    currentMultiplier -= speedMultiplier1;
+                    currentMultiplier -= SPD_MULTIPLIER1;
                 } else if(lvl < 12){
-                    currentMultiplier -= speedMultiplier2;
+                    currentMultiplier -= SPD_MULTIPLIER2;
                 } else {
-                    currentMultiplier -= speedMultiplier3;
+                    currentMultiplier -= SPD_MULTIPLIER3;
                 }
+                console.log(currentMultiplier);
             }
         },
         getCurrentSpdMultiplier() {
